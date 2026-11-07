@@ -1,0 +1,518 @@
+/* Loading a movie date… — one screen, three acts: the theater, the title card, the slide. */
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-roman.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-italic.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* the room */
+  --ground: #0b0908;          /* the dark house, projector black */
+  --surface: #2a211c;         /* one step up: seat shadow */
+  --ink: #efe4d0;             /* screen light */
+  --ink-soft: #cdbfa8;
+  --muted: #b3a48e;
+  --accent: #d6a75c;          /* the brass sconces: YES, and the light of a tap */
+  --accent-ink: #1a120c;
+  --velvet: #4a1621;          /* the seats: the cheeky answer */
+  --velvet-type: #f2d3c9;
+
+  --font: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --t-press: 140ms;
+  --t-hover: 180ms;
+
+  --pad-x: max(20px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --pad-top: max(24px, env(safe-area-inset-top));
+  --pad-bottom: max(20px, env(safe-area-inset-bottom));
+
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--ground);
+  color: var(--ink);
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font);
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ───────────── Act one: the theater ───────────── */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.stage__placeholder {
+  position: absolute;
+  inset: -8%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px);
+  transform: scale(1.04);
+  opacity: 0.9;
+  transition: opacity 900ms ease;
+}
+
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.stage.is-rolling .stage__canvas { opacity: 1; }
+.stage.is-rolling .stage__placeholder { opacity: 0; }
+
+/* The still version of the shot (no WebGL, or reduced motion). */
+.stage__still {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+}
+.stage__still img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+/* the projected words sit on the screen: x 369–1169, y 661–1178 of a 1536 × 2752 frame */
+.stage__projection {
+  position: absolute;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(26, 18, 12, 0.82);
+  font-weight: 300;
+  white-space: nowrap;
+  filter: blur(0.35px);
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.stage__projection .dots i { font-style: normal; opacity: 0; }
+.stage.is-still .stage__still { display: block; }
+.stage.is-still .stage__canvas,
+.stage.is-still .stage__placeholder { display: none; }
+.stage.is-still.is-lit .stage__projection { opacity: 1; }
+
+.stage.is-done {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 500ms ease, visibility 0s linear 500ms;
+}
+
+/* ───────────── Act two: the title card ───────────── */
+
+.invite {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+}
+
+.invite__frame {
+  width: min(100%, 30rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.invite__card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-top: 12vh;          /* sits the title at the frame's optical centre, not above it */
+}
+
+.title {
+  margin: 0;
+  font-weight: 340;
+  font-size: clamp(2.125rem, 10.4vw, 5.75rem);
+  line-height: 1.06;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  /* halation: projected light blooming into the black around the letters */
+  text-shadow: 0 0 0.4em rgba(239, 228, 208, 0.14);
+}
+.title__line { display: block; white-space: nowrap; }
+
+.signature {
+  margin: 1.75rem 0 0;
+  font-style: italic;
+  font-weight: 360;
+  font-size: clamp(1.1875rem, 4.9vw, 1.625rem);
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.answers {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.answer {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  padding: 0.6rem 1.25rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 1.25rem/1.2 var(--font);
+  letter-spacing: 0.005em;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background-color var(--t-hover) ease,
+    color var(--t-hover) ease,
+    transform var(--t-press) var(--ease-out);
+}
+.answer--yes,
+.answer--no { letter-spacing: 0.09em; font-size: 1.1875rem; }
+/* YES is the brass of the house: the one warm, lit object on the card */
+.answer--yes { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+.answer--stay { background: var(--velvet); color: var(--velvet-type); }
+
+/* press: each answer brightens in its own material, and gives a little under the thumb */
+.answer:active,
+.answer.is-pressed {
+  background: #3d302a;
+  transform: scale(0.985);
+  transition-duration: 60ms, 60ms, var(--t-press);
+}
+.answer--yes:active,
+.answer--yes.is-pressed { background: #ecc684; }
+.answer--stay:active,
+.answer--stay.is-pressed { background: #6a2232; }
+.answer:focus { outline: none; }
+.answer:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .answer:hover { background: #3a2e27; }
+  .answer--yes:hover { background: #e2b46a; }
+  .answer--stay:hover { background: #5c1c2a; }
+  /* NO stays exactly where it is; it just shrugs a little when you point at it */
+  .answer--no:hover .answer__text { animation: shrug 520ms var(--ease-out) 1; }
+}
+.answer__text { display: inline-block; }
+@keyframes shrug {
+  0%, 100% { transform: none; }
+  30% { transform: rotate(-4deg); }
+  60% { transform: rotate(3deg); }
+}
+
+/* Wide screens: the card and the answers sit together in the middle of the frame. */
+@media (min-width: 720px) and (min-height: 560px) {
+  .invite { align-items: center; }
+  .invite__frame { width: min(100%, 46rem); height: auto; }
+  .invite__card { flex: none; padding-top: 0; }
+  .answers { width: min(100%, 25rem); margin: 3.75rem auto 0; }
+}
+/* Landscape phones: title beside the answers so nothing is cut off. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .invite { align-items: center; }
+  .invite__frame {
+    width: min(100%, 52rem);
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+  .invite__card { flex: 1.25; padding: 0; }
+  .title { font-size: clamp(1.75rem, 5.6vw, 3rem); }
+  .signature { margin-top: 0.9rem; font-size: 1.125rem; }
+  .answers { flex: 1; }
+  .answer { min-height: 52px; }
+}
+
+/* entrance: the title arrives like a projector being brought into focus */
+.js .invite { visibility: hidden; }
+.js .invite.is-on { visibility: visible; }
+.js .invite .title__line,
+.js .invite .signature,
+.js .invite .answer { opacity: 0; }
+
+.js .invite.is-on .title__line {
+  animation: focus-in 1500ms var(--ease-expo) forwards;
+  animation-delay: calc(var(--i, 0) * 150ms);
+}
+.js .invite.is-on .title__line:nth-child(2) { --i: 1; }
+.js .invite.is-on .title__line:nth-child(3) { --i: 2; }
+.js .invite.is-on .signature { animation: rise 900ms var(--ease-out) 700ms forwards; }
+.js .invite.is-on .answer { animation: rise 700ms var(--ease-out) forwards; }
+.js .invite.is-on .answer--yes { animation-delay: 1000ms; }
+.js .invite.is-on .answer--no { animation-delay: 1080ms; }
+.js .invite.is-on .answer--stay { animation-delay: 1160ms; }
+
+@keyframes focus-in {
+  0%   { opacity: 0; filter: blur(8px); transform: scale(1.012); }
+  35%  { opacity: 0.85; }
+  100% { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* the frame is alive: a projector's gate weave, too small to read as movement */
+.invite.is-live .invite__frame { animation: weave 1.1s steps(1) infinite; }
+@keyframes weave {
+  0%   { transform: translate(0, 0); }
+  9%   { transform: translate(0.3px, -0.25px); }
+  18%  { transform: translate(-0.2px, 0.35px); }
+  27%  { transform: translate(0.1px, 0.1px); }
+  36%  { transform: translate(-0.35px, -0.1px); }
+  45%  { transform: translate(0.25px, 0.3px); }
+  54%  { transform: translate(0, -0.35px); }
+  63%  { transform: translate(-0.25px, 0.2px); }
+  72%  { transform: translate(0.35px, 0); }
+  81%  { transform: translate(-0.1px, -0.3px); }
+  90%  { transform: translate(0.15px, 0.25px); }
+}
+
+/* ───────────── Act three: the film slips ───────────── */
+
+.invite.is-slipping { pointer-events: none; }
+.invite.is-slipping .invite__frame {
+  animation: slip 450ms steps(1) forwards;
+}
+@keyframes slip {
+  0%     { transform: none; filter: none; }
+  18.5%  { transform: translateY(-2.5%); filter: brightness(1.18); }
+  37%    { transform: translateY(4%); filter: brightness(0.92); }
+  55.5%  { transform: translateY(17%); filter: brightness(1.1); }
+  74%    { transform: translateY(33%); filter: brightness(0.95); }
+  92.5%  { transform: translateY(49%); filter: brightness(1.04); }
+  100%   { transform: translateY(49%); filter: brightness(1.04); }
+}
+
+.frameline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 11vh;
+  z-index: 3;
+  background: #000;
+  pointer-events: none;
+  visibility: hidden;
+}
+.frameline.is-on {
+  visibility: visible;
+  animation: frameline 450ms steps(1) forwards;
+}
+@keyframes frameline {
+  0%     { transform: translateY(-12vh); }
+  18.5%  { transform: translateY(-12vh); }
+  37%    { transform: translateY(-7vh); }
+  55.5%  { transform: translateY(6vh); }
+  74%    { transform: translateY(22vh); }
+  92.5%  { transform: translateY(38vh); }
+  100%   { transform: translateY(38vh); }
+}
+
+.js .invite.is-on.is-cut,
+.frameline.is-cut { visibility: hidden; animation: none; }
+
+.rushed {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  visibility: hidden;
+}
+
+.rushed__slide {
+  position: relative;
+  margin: 0;
+  max-width: 21em;
+  font-weight: 380;
+  font-size: clamp(1.375rem, 5.9vw, 2.25rem);
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink);
+  text-wrap: balance;
+  transform: rotate(-1.5deg);
+  text-shadow: 0 0 0.45em rgba(239, 228, 208, 0.12);
+}
+.rushed__line { display: block; }
+.rushed__line + .rushed__line { margin-top: 0.55em; }
+
+/* the slide's own light: a faint, uneven patch of projected light behind the words */
+.rushed__slide::before {
+  content: "";
+  position: absolute;
+  inset: -55% -18%;
+  z-index: -1;
+  background:
+    radial-gradient(closest-side, rgba(240, 214, 168, 0.075), rgba(240, 214, 168, 0) 72%),
+    radial-gradient(closest-side at 38% 62%, rgba(240, 214, 168, 0.05), rgba(240, 214, 168, 0) 70%);
+  pointer-events: none;
+}
+
+.rushed.is-on { visibility: visible; }
+.rushed.is-on .rushed__slide { animation: slide-drop 420ms steps(1) forwards, weave 1.1s steps(1) 420ms infinite; }
+@keyframes slide-drop {
+  0%    { opacity: 0; transform: translateY(-14px) rotate(-2.5deg); }
+  10%   { opacity: 1; transform: translateY(5px) rotate(-2.5deg); }     /* the jolt */
+  20%   { opacity: 1; transform: translateY(-2px) rotate(-2.1deg); }
+  40%   { opacity: 1; transform: translateY(1px) rotate(-1.7deg); }
+  70%   { opacity: 1; transform: translateY(0) rotate(-1.5deg); }
+  100%  { opacity: 1; transform: rotate(-1.5deg); }
+}
+
+/* no-JS (or the fail-safe): the card is simply there, and the answers still lead to the message */
+.no-js .stage,
+.failsafe .stage { display: none; }
+.failsafe .invite { visibility: visible; }
+.failsafe .invite .title__line,
+.failsafe .invite .signature,
+.failsafe .invite .answer { opacity: 1; }
+.rushed:target { visibility: visible; }
+.no-js .invite:has(~ .rushed:target),
+.failsafe .invite:has(~ .rushed:target) { display: none; }
+
+/* ───────────── Film texture ───────────── */
+
+.grain {
+  position: fixed;
+  inset: -120px;
+  z-index: 5;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 192px 192px;
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 600ms ease;
+  will-change: transform;
+}
+.grain.is-on { opacity: 0.22; }
+
+/* ───────────── Sound ───────────── */
+
+.sound {
+  position: fixed;
+  z-index: 6;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.75rem;
+  border: 0;
+  background: none;
+  color: rgba(239, 228, 208, 0.7);
+  font: 400 0.9375rem/1 var(--font);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color var(--t-hover) ease, opacity 600ms ease;
+}
+.sound:focus { outline: none; }
+.sound:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.sound__icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sound__body { fill: currentColor; stroke: none; }
+.sound__wave { display: none; }
+.sound[aria-pressed="true"] { color: var(--ink); }
+.sound[aria-pressed="true"] .sound__wave { display: inline; }
+.sound[aria-pressed="true"] .sound__mute { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .sound:hover { color: var(--ink); }
+}
+.no-js .sound { display: none; }
+
+/* ───────────── Reduced motion: the same story, without travel ───────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .js .invite.is-on .title__line,
+  .js .invite.is-on .signature,
+  .js .invite.is-on .answer {
+    animation: fade 700ms ease forwards;
+  }
+  .js .invite.is-on .title__line:nth-child(2) { animation-delay: 120ms; }
+  .js .invite.is-on .title__line:nth-child(3) { animation-delay: 240ms; }
+  .js .invite.is-on .signature { animation-delay: 500ms; }
+  .js .invite.is-on .answer { animation-delay: 700ms; }
+  .invite.is-live .invite__frame { animation: none; }
+  .invite.is-slipping .invite__frame { animation: none; }
+  .frameline.is-on { animation: none; visibility: hidden; }
+  .rushed.is-on .rushed__slide { animation: fade 600ms ease forwards; opacity: 0; }
+  .answer { transition-property: background-color, color; }
+  .answer:active, .answer.is-pressed { transform: none; }
+}
+@keyframes fade { to { opacity: 1; } }

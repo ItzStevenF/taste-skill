@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0908">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <title>Loading a movie date…</title>
+  <meta name="description" content="A private screening for two.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Loading a movie date…">
+  <meta property="og:description" content="A private screening for two.">
+  <meta property="og:image" content="og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0908'/%3E%3Crect x='5' y='9' width='22' height='14' fill='%23efe4d0'/%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/newsreader-roman.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/newsreader-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    document.documentElement.classList.replace('no-js', 'js');
+    // Start fetching the moving shot right away, unless she prefers reduced motion (then the still is used).
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && document.createElement('canvas').getContext('webgl')) {
+      ['scene/theater.webp', 'scene/couple.webp', 'scene/theater-depth.png'].forEach(function (href) {
+        var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = href;
+        document.head.appendChild(l);
+      });
+    }
+    // Fail-safe: if the show never starts (script blocked, very old browser), show the card anyway.
+    setTimeout(function () {
+      if (!window.__opening) document.documentElement.classList.add('failsafe');
+    }, 15000);
+  </script>
+  <script nomodule>
+    document.documentElement.classList.replace('js', 'no-js');
+  </script>
+</head>
+<body>
+  <!-- The opening shot. Drawn by js/theater.js; the blurred frame behind it is the first paint. -->
+  <div class="stage" id="stage" aria-hidden="true">
+    <div class="stage__placeholder" style="background-image:url('data:image/webp;base64,UklGRtYAAABXRUJQVlA4IMoAAABQBgCdASobADAAPrVKn0onJCKhqrgN+OAWiUAZGXTQ/dR6e1YcLy2JcrDUuXXNzPsZe/dJTmpkOvWJgAD+/VN+ASsmbRGNcEjhhkQtyr+BdhwMSAhGagoYYfNV3SZKQxvkF9Jjan77okQVx3+bA+cPOGCWgIoRTp7aHbkRPtwsQbwTB1DlghssiyPnbjijSAK9FfSoqEYwqTsz89mdUeTQK/aatyymQbsNQ+Lax1qJ2Xv5oG65y/CKrPu2He4C1LGtuToFaFQ0rIAA')"></div>
+    <canvas class="stage__canvas" id="theater"></canvas>
+    <!-- Used when WebGL is unavailable or motion is reduced: the same shot as a still -->
+    <div class="stage__still" id="still">
+      <img src="scene/still.webp" alt="" loading="lazy" decoding="async" width="1536" height="2752">
+      <p class="stage__projection" id="projection"><span>Loading a movie date</span><span class="dots"><i>.</i><i>.</i><i>.</i></span></p>
+    </div>
+  </div>
+
+  <p class="visually-hidden" id="opening-text" aria-live="polite">Loading a movie date…</p>
+
+  <main class="invite" id="invite">
+    <div class="invite__frame">
+      <div class="invite__card">
+        <h1 class="title">
+          <span class="title__line">Do you want to go</span>
+          <span class="title__line">on a movie date</span>
+          <span class="title__line">with me?</span>
+        </h1>
+        <p class="signature">Love – Fiancee</p>
+      </div>
+      <form class="answers" id="answers" action="#rushed" method="get" aria-label="Your answer">
+        <button class="answer answer--yes" type="submit"><span class="answer__text">YES</span></button>
+        <button class="answer answer--no" type="submit"><span class="answer__text">NO</span></button>
+        <button class="answer answer--stay" type="submit"><span class="answer__text">Let’s stay in and just make out</span></button>
+      </form>
+    </div>
+  </main>
+
+  <section class="rushed" id="rushed" aria-live="assertive">
+    <p class="rushed__slide" id="slide">
+      <span class="rushed__line">This website was rushed,</span>
+      <span class="rushed__line">I can’t find out what option you picked.</span>
+      <span class="rushed__line">Please text me with your answer lol</span>
+    </p>
+  </section>
+
+  <div class="frameline" id="frameline" aria-hidden="true"></div>
+  <div class="grain" id="grain" aria-hidden="true"></div>
+
+  <button class="sound" id="sound" type="button" aria-pressed="false">
+    <svg class="sound__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path class="sound__body" d="M3 7.5h3l4-3.5v12l-4-3.5H3z"/>
+      <path class="sound__wave sound__wave--1" d="M13 7.2a4 4 0 0 1 0 5.6"/>
+      <path class="sound__wave sound__wave--2" d="M15.2 5a7 7 0 0 1 0 10"/>
+      <path class="sound__mute" d="M13 7.5l5 5m0-5l-5 5"/>
+    </svg>
+    <span class="sound__label">Sound</span>
+  </button>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
