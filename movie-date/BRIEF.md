@@ -97,6 +97,31 @@ swell for the title, film flap and pop for the failure. Never plays without her 
 | Grain every frame, also over the title and buttons; warmer, hotspotted screen with texture up close; ring glint; link preview; tap to fast-forward | Adopted. |
 | Old-style serif (EB Garamond) instead of Newsreader | Open: judged in context on the final render. |
 
+## Review round 2 — on the rendered build (2× iPhone frames, seven viewports)
+
+The independent final-CD and QA reviewers were cut off by an account usage limit before reporting,
+so this round was judged in-house against `references/critique.md`.
+
+```
+ROUND 2
+Seen in one second: a lit cinema screen over two people holding hands.
+Idea: the date itself becomes the film; the projector failing on cue is the punchline.
+Live thing: her answer (any of three) breaks the projector; sound she can switch on.
+Scores: design 8 · usability 8.5 · creativity 8.5 · content 8 → overall 8.3
+Caps: the page-level "four real pictures" cap is not applied to a one-screen invitation (one
+photograph, used as a 3D space, is the whole show).
+Fixed this round:
+1. Stair-step tearing behind the couple as the camera rose → depth-aware rack focus on the
+   screen (WebGL2 pass), denser mesh (384 columns), tighter stretch shading.
+2. Focus left the couple too early (soft by 1.9 s) → held sharp until the words land, racked
+   1.6–2.4 s, motivated by the projection.
+3. YES read as one dark row among three → brass fill (the client asked for an inviting YES);
+   each answer brightens in its own material on press.
+Still short: the stage-front lamp smears for ~0.4 s as the camera crosses the stage (≈3.9 s);
+near rows show soft stretched texture under the blur at 2.9–3.4 s; not run on a physical iPhone
+(Chromium with software WebGL; WebKit is not installed here).
+```
+
 ## Phone rules
 
 Full-height with `svh`/`dvh`, safe-area insets, no page scroll, thumb-sized targets, works in the
